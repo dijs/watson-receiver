@@ -1,10 +1,11 @@
-const app = require('express')();
+const express = require('express');
+const app = express();
 const redis = require('redis');
 const client = redis.createClient();
 
 const port = process.env.PORT || 4001;
 
-app.get('/', (req, res) => res.send('Welcome to the Watson Measurement Receiver Server'));
+app.use(express.static('public'));
 
 app.get('/measurements/:id', (req, res, next) => {
   client.lrange(req.params.id, 0, -1, (err, data) => {
