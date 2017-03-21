@@ -20,7 +20,7 @@ app.get('/clear/:id', (req, res) => {
     if (err) {
       return next(err);
     }
-    return res.send(`Deleted ${id} data.`);
+    return res.send(`Deleted ${req.params.id} data.`);
   });
 });
 
