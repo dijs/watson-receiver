@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import TimeRangeSlider from './TimeRangeSlider';
 import Analytics from './Analytics';
+import request from 'superagent';
 
 const millisInHour = 1000 * 60 * 60;
 const byPastHours = hours => ({ start: Date.now() - millisInHour * hours, end: Date.now() });
@@ -14,15 +15,19 @@ export default class App extends Component {
       data: []
     };
     // We can gather more data later....
-    fetch('/measurements/upstairs-temperature')
-      .then(res => res.json())
-      .then(rawData => {
+    request
+      .get('/measurements/upstairs-temperature')
+      .then(raw => {
         this.setState({
-          data: rawData.map(JSON.parse),
+          data: raw.body.map(JSON.parse),
         });
-      });
+      })
+      .catch(console.log);
   }
   render() {
+    if (this.state.data.length === 0) {
+      return <div>Fetching data...</div>;
+    }
     return (
       <div className="app container">
         <TimeRangeSlider
