@@ -14,12 +14,11 @@ export default class App extends Component {
       end: Date.now(),
       data: []
     };
-    // We can gather more data later....
     request
-      .get('/measurements/upstairs-temperature')
+      .get('/measurements')
       .then(raw => {
         this.setState({
-          data: raw.body.map(JSON.parse),
+          data: raw.body,
         });
       })
       .catch(console.log);
