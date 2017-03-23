@@ -15,7 +15,7 @@ export default function Graph({ readings }) {
       interpolation={'catmullRom'}
       x="timestamp"
       y="value"
-      labels={capitalize(sensor.id.replace(/-/g, ' '))}
+      label={capitalize(sensor.id.replace(/-/g, ' '))}
     />;
   });
   return (
