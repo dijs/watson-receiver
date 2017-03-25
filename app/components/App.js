@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import TimeRangeSlider from './TimeRangeSlider';
 import Analytics from './Analytics';
 import request from 'superagent';
+// import mockData from './mockData.json';
 
 const millisInHour = 1000 * 60 * 60;
 const byPastHours = hours => ({ start: Date.now() - millisInHour * hours, end: Date.now() });
@@ -9,11 +10,17 @@ const byPastHours = hours => ({ start: Date.now() - millisInHour * hours, end: D
 export default class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      start: 0,
-      end: Date.now(),
-      data: []
-    };
+    this.state = Object.assign(
+      byPastHours(24),
+      {
+        data: []
+      }
+    );
+    // setTimeout(() => {
+    //   this.setState({
+    //     data: mockData,
+    //   });
+    // }, 1000);
     request
       .get('/measurements')
       .then(raw => {
