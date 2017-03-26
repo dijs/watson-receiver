@@ -1,7 +1,17 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const redis = require('redis');
+const request = require('request');
+const fs = require('fs');
 const client = redis.createClient();
+const Rekognition = require('aws-sdk/clients/Rekognition');
+
+const rekognition = new Rekognition({
+  region: 'us-east-1',
+  accessKeyId: process.env.ACCESS_KEY_ID,
+  secretAccessKey: process.env.SECRET_ACCESS_KEY,
+});
 
 const port = process.env.PORT || 4001;
 
@@ -17,6 +27,73 @@ const getAllMeasurements = id => {
 };
 
 app.use(express.static('public'));
+
+// TEMP
+const allowCrossDomain = (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+};
+
+app.use(allowCrossDomain);
+
+const cameraUrls = [
+  'http://192.168.1.161/snapshot.jpg?user=api&pwd=api',
+  'http://192.168.1.17:88/cgi-bin/CGIProxy.fcgi?cmd=snapPicture2&usr=api&pwd=api&',
+];
+
+function saveSnapshot(url, index) {
+  const ws = fs.createWriteStream(`./snapshot-${index}.jpg`);
+  ws.on('error', console.log);
+  request(url).pipe(ws);
+}
+
+// Could just call this save... every 30 seconds or so...
+app.get('/snaps', (req, res) => {
+  cameraUrls.map(saveSnapshot);
+  res.json({
+    count: cameraUrls.length,
+  });
+});
+
+app.get('/snapshot/:index', (req, res) => {
+  fs.createReadStream(`./snapshot-${req.params.index}.jpg`).pipe(res);
+});
+
+app.get('/snapshot-info/:index', (req, res) => {
+  const data = fs.readFileSync(`./snapshot-${req.params.index}.jpg`);
+  const params = {
+    Image: {
+      Bytes: data,
+    },
+  };
+  rekognition.detectLabels(params, (err, data) => {
+    if (err) {
+      return console.log(err, err.stack);
+    }
+    res.json(data);
+  });
+});
+
+app.get('/snapshot-faces/:index', (req, res) => {
+  const data = fs.readFileSync(`./snapshot-${req.params.index}.jpg`);
+  const params = {
+    Image: {
+      Bytes: data,
+    },
+    Attributes: [
+      'ALL',
+    ]
+  };
+  rekognition.detectFaces(params, (err, data) => {
+    if (err) {
+      return console.log(err, err.stack);
+    }
+    console.log(data);
+    res.json(data);
+  });
+});
 
 app.get('/measurements/:id', (req, res, next) => {
   getAllMeasurements(req.params.id)

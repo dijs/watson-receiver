@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import TimeRangeSlider from './TimeRangeSlider';
 import Analytics from './Analytics';
+import Cameras from './Cameras';
 import request from 'superagent';
 // import mockData from './mockData.json';
 
@@ -13,9 +14,10 @@ export default class App extends Component {
     this.state = Object.assign(
       byPastHours(24),
       {
-        data: []
+        data: [],
       }
     );
+    // console.log(process.env);
     // setTimeout(() => {
     //   this.setState({
     //     data: mockData,
@@ -44,6 +46,7 @@ export default class App extends Component {
           start={this.state.start}
           end={this.state.end}
         />
+        <Cameras />
       </div>
     );
   }
