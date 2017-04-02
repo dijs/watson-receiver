@@ -27,7 +27,7 @@ export default ({ body, initialState }) => {
             color: white;
           }
         </style>
-        <link rel="stylesheet" href="/assets/index.css" />
+        <link rel="stylesheet" href="/rc-slider.css" />
       </head>
       <body>
         <div id="root">${body}</div>
