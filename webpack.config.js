@@ -1,60 +1,89 @@
-/* eslint-disable */
-
 var webpack = require('webpack');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+var nodeExternals = require('webpack-node-externals');
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-var config = {
-  context: __dirname + '/app',
-  entry: {
-    app: './index.js',
-  },
-  output: {
-    path: __dirname + '/public',
-    filename: 'js/bundle.js',
-    publicPath: '',
-  },
-  devServer: {
-    open: true, // to open the local server in browser
-    contentBase: __dirname + '/src',
-  },
-  plugins: [new HtmlWebpackPlugin({
-    template: './template.html'
-  })],
-  module: {
-    rules: [
-      {
-        test: /\.js$/, //Check for all js files
-        use: [{
-          loader: 'babel-loader',
-          options: {
-            presets: ['latest', 'react'],
-            plugins: ['transform-class-properties']
-          }
-        }]
-      },
-      {
-        test: /\.s?css$/,
-        use: [{
-            loader: "style-loader" // creates style nodes from JS strings
-        }, {
-            loader: "css-loader" // translates CSS into CommonJS
-        }, {
-            loader: "sass-loader" // compiles Sass to CSS
-        }]
-      }
-    ]
-  },
-  devtool: 'eval-source-map' // Default development sourcemap
-};
+module.exports = [
+  {
+    entry: {
+      app: './src/server.js',
+    },
+    output: {
+      path: __dirname + '/dist',
+      filename: 'server.js',
+      libraryTarget: 'commonjs2',
+      publicPath: '/',
+    },
+    target: 'node',
+    node: {
+      console: false,
+      global: false,
+      process: false,
+      Buffer: false,
+      __filename: false,
+      __dirname: false
+    },
+    externals: nodeExternals(),
+    plugins: [
 
-// Check if build is running in production mode, then change the sourcemap type
-if (process.env.NODE_ENV === "production") {
-  config.devtool = "source-map";
-
-  // Can do more here
-  // JSUglify plugin
-  // Offline plugin
-  // Bundle styles seperatly using plugins etc,
-}
-
-module.exports = config;
+    ],
+    module: {
+      rules: [
+        {
+          test: /\.js$/, //Check for all js files
+          use: [{
+            loader: 'babel-loader',
+            options: {
+              presets: ['latest', 'react'],
+              plugins: ['transform-class-properties']
+            }
+          }]
+        },
+      //   {
+      //    test: /\.s?css$/,
+      //    loaders: [
+      //      'isomorphic-style-loader',
+      //      'css-loader?modules&localIdentName=[name]_[local]_[hash:base64:3]'
+      //     //  'postcss-loader'
+      //    ]
+      //  }
+      ]
+    },
+  },
+  {
+    entry: './src/app/browser.js',
+    output: {
+      path: __dirname + '/dist/assets',
+      publicPath: '/',
+      filename: 'bundle.js'
+    },
+    plugins: [
+      new ExtractTextPlugin({
+        filename: 'index.css',
+        allChunks: true
+      })
+    ],
+    module: {
+      loaders: [
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          use: [{
+            loader: 'babel-loader',
+            options: {
+              presets: ['latest', 'react'],
+              plugins: ['transform-class-properties']
+            }
+          }]
+        },
+        {
+          test: /\.css$/,
+          loader: ExtractTextPlugin.extract('css-loader')
+          // loader: new ExtractTextPlugin({ filename: 'css!sass' })
+        }
+      ]
+    }
+    // resolve: {
+    //   extensions: ['', '.js', '.jsx']
+    // }
+  }
+];

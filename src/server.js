@@ -7,6 +7,13 @@ const fs = require('fs');
 const client = redis.createClient();
 const Rekognition = require('aws-sdk/clients/Rekognition');
 
+const mockData = require('./mockData.json');
+
+import React from 'react';
+import { renderToString } from 'react-dom/server';
+import App from './app/components/App.js';
+import template from './template';
+
 const rekognition = new Rekognition({
   region: 'us-east-1',
   accessKeyId: process.env.ACCESS_KEY_ID,
@@ -26,17 +33,46 @@ const getAllMeasurements = id => {
   });
 };
 
-app.use(express.static('public'));
-
-// TEMP
-const allowCrossDomain = (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  next();
+const getAllKeys = () => {
+  return new Promise((resolve, reject) => {
+    client.keys('*', (err, keys) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(keys);
+    });
+  });
 };
 
-app.use(allowCrossDomain);
+const getAllDeviceData = () => {
+  return getAllKeys()
+    .then(keys => {
+      return Promise.all(keys.map(getAllMeasurements))
+        .then(dataList => {
+          return dataList.map((data, index) => {
+            return {
+              id: keys[index],
+              data,
+            };
+          });
+        });
+    });
+};
+
+app.use('/assets', express.static(__dirname + '/assets'));
+
+app.get('/', (req, res, next) => {
+  getAllDeviceData()
+    .then(data => {
+      const initialState = { data };
+      const appString = renderToString(<App {...initialState} />);
+      res.send(template({
+        body: appString,
+        initialState: JSON.stringify(initialState)
+      }));
+    })
+    .catch(err => next(err))
+});
 
 const cameraUrls = [
   'http://192.168.1.161/snapshot.jpg?user=api&pwd=api',
@@ -49,13 +85,10 @@ function saveSnapshot(url, index) {
   request(url).pipe(ws);
 }
 
-// Could just call this save... every 30 seconds or so...
-app.get('/snaps', (req, res) => {
+// Save new pics every five seconds
+setInterval(() => {
   cameraUrls.map(saveSnapshot);
-  res.json({
-    count: cameraUrls.length,
-  });
-});
+}, 5000);
 
 app.get('/snapshot/:index', (req, res) => {
   fs.createReadStream(`./snapshot-${req.params.index}.jpg`).pipe(res);
@@ -92,32 +125,6 @@ app.get('/snapshot-faces/:index', (req, res) => {
     }
     console.log(data);
     res.json(data);
-  });
-});
-
-app.get('/measurements/:id', (req, res, next) => {
-  getAllMeasurements(req.params.id)
-    .then(data => res.json(data))
-    .catch(err => next(err));
-});
-
-app.get('/measurements', (req, res, next) => {
-  client.keys('*', (err, keys) => {
-    if (err) {
-      return next(err);
-    }
-    Promise.all(keys.map(getAllMeasurements))
-      .then(dataList => {
-        return dataList.map((data, index) => {
-          return {
-            id: keys[index],
-            data,
-          };
-        });
-      })
-      .then(data => res.json(data))
-      .catch(err => next(err));
-
   });
 });
 

@@ -3,7 +3,6 @@ import TimeRangeSlider from './TimeRangeSlider';
 import Analytics from './Analytics';
 import Cameras from './Cameras';
 import request from 'superagent';
-// import mockData from './mockData.json';
 
 const millisInHour = 1000 * 60 * 60;
 const byPastHours = hours => ({ start: Date.now() - millisInHour * hours, end: Date.now() });
@@ -11,29 +10,10 @@ const byPastHours = hours => ({ start: Date.now() - millisInHour * hours, end: D
 export default class App extends Component {
   constructor(props) {
     super(props);
-    this.state = Object.assign(
-      byPastHours(24),
-      {
-        data: [],
-      }
-    );
-    // console.log(process.env);
-    // setTimeout(() => {
-    //   this.setState({
-    //     data: mockData,
-    //   });
-    // }, 1000);
-    request
-      .get('/measurements')
-      .then(raw => {
-        this.setState({
-          data: raw.body,
-        });
-      })
-      .catch(console.log);
+    this.state = byPastHours(24);
   }
   render() {
-    if (this.state.data.length === 0) {
+    if (this.props.data.length === 0) {
       return <div>Fetching data...</div>;
     }
     return (
@@ -42,7 +22,7 @@ export default class App extends Component {
           onPastHoursChange={hours => this.setState(byPastHours(hours))}
         />
         <Analytics
-          data={this.state.data}
+          data={this.props.data}
           start={this.state.start}
           end={this.state.end}
         />

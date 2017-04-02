@@ -2,27 +2,18 @@ import React, { Component } from 'react';
 import TimeRangeSlider from './TimeRangeSlider';
 import Analytics from './Analytics';
 import request from 'superagent';
-import './Cameras.scss';
 
 export default class Cameras extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      loaded: false,
-    };
+    this.state = {};
     this.getInfo = this.getInfo.bind(this);
     this.renderCamera = this.renderCamera.bind(this);
-    this.updateSnapshots = this.updateSnapshots.bind(this);
   }
   componentDidMount() {
-    this.updateSnapshots();
-  }
-  updateSnapshots() {
-    request.get('/snaps').then(() => {
-      setTimeout(() => {
-        this.setState({ loaded: true })
-      }, 2000);
-    });
+    setInterval(() => {
+      this.forceUpdate();
+    }, 5000);
   }
   getInfo(index) {
     this.setState({
@@ -56,13 +47,10 @@ export default class Cameras extends Component {
     </div>
   }
   renderCamera(index) {
-    if (!this.state.loaded) {
-      return <div>Loading cameras...</div>;
-    }
     return (
       <div className="camera">
         <img
-          src={`/snapshot/${index}`}
+          src={`/snapshot/${index}?time=${Date.now()}`}
           onClick={() => this.getInfo(index)}
         />
         {this.renderInfo(this.state[`info-${index}`])}
@@ -72,8 +60,6 @@ export default class Cameras extends Component {
   render() {
     return (
       <div className="cameras">
-        <button onClick={this.updateSnapshots}>Update</button>
-        <br />
         {this.renderCamera(0)}
         {this.renderCamera(1)}
       </div>
