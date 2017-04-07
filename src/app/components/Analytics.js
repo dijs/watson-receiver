@@ -1,5 +1,6 @@
 import React from 'react';
 import Graph from './Graph';
+import GraphInfo from './GraphInfo';
 
 const maxGraphPoints = 16;
 
@@ -24,6 +25,7 @@ export default function Analytics({ data, start, end }) {
   return (
     <div>
       <Graph readings={readings} />
+      <GraphInfo readings={readings} />
     </div>
   );
 }

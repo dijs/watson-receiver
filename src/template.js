@@ -26,6 +26,17 @@ export default ({ body, initialState }) => {
             border-radius: 3px;
             color: white;
           }
+          .graph-info {
+            font-family: monospace;
+            display: inline-block;
+            margin-right: 20px;
+          }
+          .graph-info .info-type .name {
+            font-weight: 900;
+          }
+          .graph-info .info-type .value {
+            margin-left: 10px;
+          }
         </style>
         <link rel="stylesheet" href="/rc-slider.css" />
       </head>

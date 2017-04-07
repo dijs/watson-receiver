@@ -4,8 +4,10 @@ const app = express();
 const redis = require('redis');
 const request = require('request');
 const fs = require('fs');
-const client = redis.createClient();
 const Rekognition = require('aws-sdk/clients/Rekognition');
+
+const client = redis.createClient();
+// host: '192.168.1.103'
 
 const mockData = require('./mockData.json');
 
